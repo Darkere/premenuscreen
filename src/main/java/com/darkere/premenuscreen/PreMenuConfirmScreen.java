@@ -1,12 +1,15 @@
 package com.darkere.premenuscreen;
 
-import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import javafx.scene.input.KeyCode;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screen.ConfirmOpenLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.widget.button.Button;
+import net.minecraft.client.util.InputMappings;
 import net.minecraft.util.Util;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraftforge.fml.client.gui.widget.ExtendedButton;
+import org.lwjgl.glfw.GLFW;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -18,9 +21,14 @@ public class PreMenuConfirmScreen extends ConfirmScreen {
     StringTextComponent link = new StringTextComponent(PreMenuScreen.CLIENT_CONFIG.getLink());
     StringTextComponent linktext = new StringTextComponent(PreMenuScreen.CLIENT_CONFIG.getLinkButtonText());
     URI uri;
-    public PreMenuConfirmScreen(BooleanConsumer s, Runnable run) {
-        super(s, new StringTextComponent(PreMenuScreen.CLIENT_CONFIG.getHeader()), new StringTextComponent("message2?"));
-        this.run = run;
+    boolean reset = true;
+    public PreMenuConfirmScreen() {
+        super((s)->{}, new StringTextComponent(PreMenuScreen.CLIENT_CONFIG.getHeader()), new StringTextComponent("message2?"));
+        this.run = () -> {
+            if(reset) PreMenuScreen.CLIENT_CONFIG.disable();
+            Minecraft.getInstance().displayGuiScreen(null);
+
+        };
     }
 
     @Override
@@ -51,5 +59,17 @@ public class PreMenuConfirmScreen extends ConfirmScreen {
             }
         }, link.getText(), false));
 
+    }
+
+    @Override
+    public boolean keyPressed(int buttoncode, int p_keyPressed_2_, int p_keyPressed_3_) {
+        if(hasShiftDown()&& buttoncode == GLFW.GLFW_KEY_ENTER){
+            reset = false;
+            EventHandler.skip = true;
+            run.run();
+        } else if (buttoncode == GLFW.GLFW_KEY_F5){
+            Minecraft.getInstance().displayGuiScreen(new PreMenuConfirmScreen());
+        }
+        return super.keyPressed(buttoncode, p_keyPressed_2_, p_keyPressed_3_);
     }
 }
